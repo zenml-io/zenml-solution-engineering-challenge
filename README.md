@@ -22,12 +22,66 @@ We don't want you to reinvent the wheel. We want you to use the tools we already
 
 **Requirement**: Use the [Official ZenML Terraform Modules](https://registry.terraform.io/modules/zenml-io/zenml-stack) to provision a complete remote stack on the cloud provider of your choice.
 
+#### Terraform terminology (modules vs providers)
+If you're new to Terraform, this is the key distinction:
+
+- **Terraform provider**: a plugin that lets Terraform talk to an API (e.g. AWS, GCP, Azure, **ZenML**) and exposes **resources** like `zenml_stack`, `zenml_stack_component`, etc.
+- **Terraform module**: a reusable package of Terraform code that typically uses one or more providers under the hood.
+
+In this challenge you will use **both**:
+
+- the **ZenML stack module** (`zenml-io/zenml-stack/<cloud>`) to provision the cloud resources and register a baseline stack
+- the **ZenML Terraform provider** (`zenml-io/zenml`) to declaratively add/attach extra ZenML components (like a `log_store`)
+
 This includes:
 - **Artifact Store** (S3/GCS/Azure Blob)
 - **Container Registry** (ECR/GCR/ACR)
 - **Orchestrator** (SageMaker/Vertex AI/Azure ML)
 
 **Why this stack?** This is the most common migration path for customers moving from local development to production.
+
+### 1.5 Log Stores (Terraform-managed) 🪵
+
+In production, customers will ask: **"Where do I find the logs for this run / step?"** This task ensures your stack has a clear, centralized answer.
+
+#### What is a Log Store?
+A **Log Store** is a ZenML stack component responsible for collecting, storing, and retrieving logs generated during pipeline and step execution. It captures:
+
+- standard Python `logging`
+- `print()` statements
+- anything written to `stdout` / `stderr`
+
+If you don't configure a log store, ZenML will fall back to an **Artifact Log Store** (stores logs in your artifact store). For this challenge, we want you to **explicitly configure** a log store so the setup is clear and reproducible.
+
+#### How it fits into a stack
+A ZenML **stack** is a collection of components (orchestrator, artifact store, container registry, ...). The **log store** is the component that defines **where execution logs go** and how you access them during debugging.
+
+#### Requirement: register + attach a Log Store using Terraform
+Extend your Terraform to:
+
+1. **Register a log store** in ZenML (via Terraform)
+2. **Attach it to a stack** (so the active stack uses it)
+3. **Prove it works** by running the pipeline and showing logs for at least one step
+
+**Implementation hint (important):** the official `zenml-io/zenml-stack/<cloud>` module provisions cloud resources *and* registers a stack, but it doesn't configure log stores for you. You'll add this as an extra layer in your Terraform.
+
+**Terraform hint (to avoid ambiguity):** Log Stores are stack components. Use the ZenML Terraform provider to:
+
+1. create a `zenml_stack_component` with `type = "log_store"` (choose a flavor like `otel`)
+2. create / update a `zenml_stack` resource whose `components` map includes a `log_store = <your log store component id>` entry
+
+If you're unsure about the exact schema, consult the ZenML Terraform provider docs for `zenml_stack_component` and `zenml_stack` resources.
+
+#### Recommended (free) choice: OTEL Log Store + a free OTLP endpoint
+Use the built-in **OpenTelemetry (`otel`) log store flavor** and send logs to an **OTLP/HTTP endpoint**.
+
+- **Backend**: use any OTEL-compatible backend that offers a free tier / trial (e.g. Grafana Cloud, Honeycomb, Dash0) or any endpoint you already have.
+- **Auth**: do **not** commit secrets; pass auth headers using Terraform variables or environment variables.
+
+> Note: the OTEL log store is generally **write-only** (export only). That's OK: show the logs in the external backend UI.
+
+#### Stretch (optional): secure it properly
+Use **ZenML secrets** for any API keys and reference those secrets from your log store configuration (no plaintext secrets in Terraform or git).
 
 ### 2. Use a remote ZenML server 🔄
 
@@ -64,8 +118,15 @@ Your repository should contain:
 1. **Terraform Code**: Your updated `infrastructure/main.tf` used to provision the cloud stack using the official ZenML Terraform module.
 2. **Pipeline Execution Proof**: Use the included `src/run.py` (already provided) as a smoke test and run it against your cloud stack successfully.
    - You may modify `src/run.py`, but you don't have to.
-3. **Documentation**: A short guide titled "How to migrate your ZenML pipeline to the cloud" that explains your solution end-to-end.
-4. **Demo Video**: A link to your **5-minute Loom video** in the documentation.
+3. **Log Store Integration**: Terraform code that registers a ZenML `log_store` stack component and uses it in a ZenML stack.
+4. **Documentation**: A short guide titled "How to migrate your ZenML pipeline to the cloud" that explains your solution end-to-end. Include:
+   - A short explanation of what a **Log Store** is and why it matters
+   - Where to find logs for a pipeline run / step in your chosen setup
+   - A short **Architecture** section (keep it short — ~1 page max) covering:
+     - components you deployed
+     - trust boundaries and where secrets live
+     - expected costs + one cost optimization idea
+5. **Demo Video**: A link to your **5-minute Loom video** in the documentation.
 
 ## Evaluation Criteria 🔍
 
@@ -74,7 +135,8 @@ We are not looking for the most complex Terraform setup. We are looking for:
 1. **Documentation Reading**: Did you use the official ZenML modules correctly?
 2. **Debugging Skills**: Did you figure out cloud authentication and service connector setup?
 3. **Customer Empathy**: Is your documentation and video clear, encouraging, and easy for a Data Scientist to understand?
-4. **"It Works"**: Does the pipeline actually run on the cloud stack?
+4. **Observability**: Did you configure a log store and make it obvious where to find step logs?
+5. **"It Works"**: Does the pipeline actually run on the cloud stack?
 
 ## AI Policy 🤖
 
@@ -100,6 +162,9 @@ We value the "Detective Work" just as much as the solution.
 - [ZenML Terraform Modules Registry](https://registry.terraform.io/modules/zenml-io/zenml-stack)
 - [Deploy a cloud stack with Terraform (ZenML docs)](https://docs.zenml.io/stacks/deployment/deploy-a-cloud-stack-with-terraform)
 - [ZenML Service Connectors Guide](https://docs.zenml.io/stacks/service-connectors/auth-management)
+- [ZenML Log Stores](https://docs.zenml.io/stacks/stack-components/log-stores)
+- [ZenML Logging](https://docs.zenml.io/concepts/steps_and_pipelines/logging)
+- [ZenML Terraform Provider](https://registry.terraform.io/providers/zenml-io/zenml/latest/docs)
 
 ---
 

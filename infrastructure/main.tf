@@ -9,6 +9,28 @@
 #
 # Your goal is to provision a complete cloud stack (infrastructure + ZenML registration),
 # e.g. artifact store, container registry, and a cloud orchestrator.
+#
+# Terraform terminology (modules vs providers):
+# - Providers (e.g. `hashicorp/aws`, `zenml-io/zenml`) expose *resources* you can manage.
+# - Modules (e.g. `zenml-io/zenml-stack/aws`) are reusable Terraform packages that
+#   provision multiple resources using one or more providers.
+#
+# In this challenge, you'll typically:
+# - use the `zenml-io/zenml-stack/<cloud>` module to provision cloud infra + register a stack
+# - use the `zenml-io/zenml` provider directly for additional ZenML resources (e.g. `log_store`)
+#
+# -------------------------------------------------------------------
+# Suggested workflow (high level)
+# -------------------------------------------------------------------
+# 1) Configure your cloud provider + the ZenML provider
+# 2) Instantiate the `zenml-io/zenml-stack/<cloud>` module (creates infra + registers a baseline stack)
+# 3) Add a Log Store to the stack (via the ZenML Terraform provider)
+#
+# Tips:
+# - Use `terraform output` and the ZenML dashboard to verify what got created.
+# - When stuck, consult:
+#   - the module docs: https://registry.terraform.io/modules/zenml-io/zenml-stack
+#   - the ZenML Terraform provider docs: https://registry.terraform.io/providers/zenml-io/zenml/latest/docs
 
 terraform {
   required_providers {
