@@ -3,5 +3,8 @@ name = "zenml-solution-engineering-challenge"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "aws-profile-manager>=0.7.3",
+    "kubernetes>=34.1.0",
+    "sagemaker>=2.237.3,<3.0.0",
     "zenml[local,server]>=0.93.0",
 ]
