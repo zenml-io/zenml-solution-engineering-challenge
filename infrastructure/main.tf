@@ -34,60 +34,75 @@
 
 terraform {
   required_providers {
-    # Example for AWS:
-    # aws = {
-    #   source  = "hashicorp/aws"
-    #   version = "~> 5.0"
-    # }
-
-    # Example for GCP:
-    # google = {
-    #   source  = "hashicorp/google"
-    #   version = "~> 6.0"
-    # }
-
-    # Example for Azure:
-    # azurerm = {
-    #   source  = "hashicorp/azurerm"
-    #   version = "~> 4.0"
-    # }
+    aws = {
+      source = "hashicorp/aws"
+      # version = ">=6.28.0"
+    }
 
     zenml = {
       source = "zenml-io/zenml"
+      # version = ">=3.0.4"
     }
   }
 }
 
-# TODO: Configure your cloud provider
-# provider "aws" {
-#   region = var.aws_region
-# }
+provider "aws" {
+  region = "us-west-2"
+  # profile = "sandbox"
+}
 
-# TODO: Configure ZenML provider
 # provider "zenml" {
 #   # Configuration will be loaded from environment variables:
 #   # ZENML_SERVER_URL and ZENML_API_KEY
 # }
 
-# TODO: Use the ZenML stack module for your chosen cloud provider.
-# This provisions cloud resources AND registers the resulting stack in your ZenML server.
-# module "zenml_stack" {
-#   source = "zenml-io/zenml-stack/aws"
-#   # or "zenml-io/zenml-stack/gcp"
-#   # or "zenml-io/zenml-stack/azure"
-#
-#   # Recommended: pin a version (see the Terraform registry for latest).
-#   # version = "x.y.z"
-#
-#   zenml_stack_name = "cloud-migration-stack"
-#   # Pick a cloud orchestrator:
-#   # - AWS: "sagemaker" (default)
-#   # - GCP: "vertex" (default)
-#   # - Azure: typically "skypilot" / "azureml" depending on module capabilities
-#   orchestrator = "sagemaker"
+
+# THis will create a ZenML stack on AWS with SageMaker as the orchestrator
+module "zenml_stack" {
+  source = "zenml-io/zenml-stack/aws"
+
+  zenml_stack_name = "cloud-migration-stack"
+  orchestrator     = "sagemaker" # or "skypilot" or "local"
+
+  version = "2.0.10" # latest as of Jan 10 2026
+}
+
+
+# ref: https://registry.terraform.io/modules/zenml-io/zenml-stack/aws/latest?tab=outputs
+# I copied the descriptions of the outputs from ^^^above docs
+
+
+output "zenml_stack" {
+  description = "The ZenML stack that was registered with the ZenML server"
+  value       = module.zenml_stack.zenml_stack
+}
+
+output "zenml_stack_id" {
+  description = "The ID of the ZenML stack that was registered with the ZenML server"
+  value       = module.zenml_stack.zenml_stack_id
+}
+
+output "zenml_stack_name" {
+  description = "The name of the ZenML stack that was registered with the ZenML server"
+  value       = module.zenml_stack.zenml_stack_name
+}
+
+# output "orchestrator" {
+#   description = "The orchestrator that was registered with the ZenML server"
+#   value       = module.zenml_stack.orchestrator
 # }
 
-# TODO: Add outputs for important values
-# output "zenml_stack_id" {
-#   value = module.zenml_stack.zenml_stack_id
+# output "artifact_store" {
+#   description = "The artifact store that was registered with the ZenML server"
+#   value       = module.zenml_stack.artifact_store
+# }
+
+# output "container_registry" {
+#   description = "The container registry that was registered with the ZenML server"
+#   value       = module.zenml_stack.container_registry
+# }
+
+# output "deployer" {
+#   description = "The deployer that was registered with the ZenML server"
+#   value       = module.zenml_stack.deployer
 # }

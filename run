@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-export AWS_PROFILE=sandbox
+export AWS_PROFILE=zenml
 export AWS_REGION=us-west-2
 export AWS_DEFAULT_REGION=${AWS_REGION}
 
@@ -28,7 +28,16 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 
 
-zenml_login() {
+deploy_infra() {
+	source "$THIS_DIR/.env"
+
+	terraform -chdir="${THIS_DIR}/infrastructure" init
+	terraform -chdir="${THIS_DIR}/infrastructure" plan
+	terraform -chdir="${THIS_DIR}/infrastructure" apply -auto-approve
+}
+
+
+zenml_login:local() {
 	uv run zenml login --local
 }
 
@@ -36,7 +45,7 @@ run_pipeline() {
 	uv run src/run.py
 }
 
-deploy_pipeline() {
+deploy_pipeline:local() {
 	uv run zenml init
 	uv run zenml pipeline deploy src.run:cloud_migration_pipeline
 }
