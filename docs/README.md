@@ -98,7 +98,7 @@
 - While trying to run the pipeline with the SageMaker orchestrator, I got the following errors.
 
     <p align="center">
-        <img src="./images/pipeline-run-deployed-stack.png" alt="Pipeline Run on Deployed Stack" width="600"/>
+        <img src="./images/pipeline-run-deployed-stack.png" alt="Pipeline Run on Deployed Stack" width="800"/>
         <br>
         <em>Pipeline Run on Deployed Stack</em>
     </p>
@@ -242,4 +242,9 @@
     Task completed in 0m46.408s
     ```
     </details>
+
+  - During the pipeline run, I also got this Sagemaker Permission Error. Since this was non-blocking, I didn't do anything about it.
+      ```shell
+      There was an issue while extracting the SageMaker Studio URL: An error occurred (AccessDeniedException) when calling the ListDomains operation: User: arn:aws:sts::643766342908:assumed-role/zenml-39163c977f9b/zenml-connector-df5648e5-6c93-4661-a09c-5002a551c756 is not authorized to perform: sagemaker:ListDomains on resource: arn:aws:sagemaker:us-west-2:643766342908:domain/* because no identity-based policy allows the sagemaker:ListDomains action
+      ```
 
