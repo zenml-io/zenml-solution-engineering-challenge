@@ -33,7 +33,7 @@ def validator(processed_data: str) -> bool:
     return is_valid
 
 
-@pipeline
+@pipeline(enable_cache=False)
 def cloud_migration_pipeline():
     """The pipeline that connects the steps."""
     data = loader()
