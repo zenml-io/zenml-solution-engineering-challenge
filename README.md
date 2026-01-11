@@ -9,6 +9,7 @@
 * AI wasn't used in writing any code, however I did ask ChatGPT to write me the things I need to learn to complete the challenge.
   * TBH, I didn't follow it through, because it was quite long😂. So I wrote a checklist for myself which you can read it my detailed docs
   * On few specific errors, I did ask ChatGPT for help in debugging them. I have mentioned those instances in my detailed docs.
+  * Also I did ask ChatGPT to give me a skeleton SOLUTION.md file to start with and later I filled it in with my content.
 
 * Also I did do parts of Hashicorp's Terraform [AWS tutorial](https://developer.hashicorp.com/terraform/tutorials/aws-get-started) to get some familiarity with Terraform.
 
