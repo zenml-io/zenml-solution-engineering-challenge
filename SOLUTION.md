@@ -104,7 +104,7 @@ A ZenML `log_store` component of flavor `otel` is registered using Terraform and
 
 ### What is a Log Store?
 
-A log store in ZenML captures and centralizes logs from pipeline runs (stdout, logging, etc.). This improves observability and debugging in production setups.
+A log store is a ZenML stack component that centrally collects and stores logs produced by your pipeline/step executions. It acts as a central repository for logs making it easier to find and analyze logs(if and when needed).
 
 ### Where to Find Logs?
 
