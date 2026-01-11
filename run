@@ -19,6 +19,8 @@ tf_init() {
 }
 
 deploy_infra() {
+	local dir="${THIS_DIR}/infrastructure"
+
 	source "$THIS_DIR/.env"
 
 	# Set Terraform variables for Grafana OTLP endpoint and API key
@@ -31,11 +33,15 @@ deploy_infra() {
 		exit 1
 	}
 
-	terraform -chdir="${THIS_DIR}/infrastructure" fmt
-	terraform -chdir="${THIS_DIR}/infrastructure" validate
-	# terraform -chdir="${THIS_DIR}/infrastructure" plan
-	terraform -chdir="${THIS_DIR}/infrastructure" apply
+	terraform -chdir="${dir}" fmt
+	terraform -chdir="${dir}" validate
+	# terraform -chdir="${dir}" plan
+	terraform -chdir="${dir}" apply
 
+}
+
+destroy_infra() {
+	terraform -chdir="${THIS_DIR}/infrastructure" destroy
 }
 
 run_pipeline() {
