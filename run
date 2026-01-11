@@ -6,19 +6,6 @@ export AWS_PROFILE=zenml
 export AWS_REGION=us-west-2
 export AWS_DEFAULT_REGION=${AWS_REGION}
 
-# # aws account id/hash used to make a unique, but consistent bucket name
-# AWS_ACCOUNT_ID=$(aws sts get-caller-identity --profile $AWS_PROFILE --query "Account" --output text || echo "")
-
-# # Only create bucket name if AWS_ACCOUNT_ID is available
-# # Suppress errors if profile doesn't exist (e.g., in CI/CD)
-# if [ -n "$AWS_ACCOUNT_ID" ]; then
-#     AWS_ACCOUNT_ID_HASH=$(echo -n "${AWS_ACCOUNT_ID}" | sha256sum | cut -c5-8)
-#     export S3_BUCKET_NAME="terraform-playground-bucket-${AWS_ACCOUNT_ID_HASH}" # terraform-playground-bucket-6721
-# else
-#     echo "WARNING: Could not retrieve AWS Account ID. Profile '$AWS_PROFILE' may not exist."
-# 	echo "S3_BUCKET_NAME environment variable will not be set."
-# fi
-
 # https://docs.zenml.io/getting-started/installation#local-dashboard
 # If you want to run a local server while running on a Mac with Apple Silicon,
 # you should set the following environment variable:
@@ -27,13 +14,28 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 
+tf_init() {
+	terraform -chdir="${THIS_DIR}/infrastructure" init
+}
 
 deploy_infra() {
 	source "$THIS_DIR/.env"
 
-	terraform -chdir="${THIS_DIR}/infrastructure" init
-	terraform -chdir="${THIS_DIR}/infrastructure" plan
-	terraform -chdir="${THIS_DIR}/infrastructure" apply -auto-approve
+	# Set Terraform variables for Grafana OTLP endpoint and API key
+	export TF_VAR_grafana_otlp_endpoint="${OTEL_EXPORTER_OTLP_ENDPOINT}"
+	export TF_VAR_grafana_otlp_auth_header="${OTEL_EXPORTER_OTLP_HEADERS}"
+
+	# Check if aws profile is active
+	aws sts get-caller-identity > /dev/null 2>&1 || {
+		echo "AWS profile '${AWS_PROFILE}' is not active. Please configure it and try again."
+		exit 1
+	}
+
+	terraform -chdir="${THIS_DIR}/infrastructure" fmt
+	terraform -chdir="${THIS_DIR}/infrastructure" validate
+	# terraform -chdir="${THIS_DIR}/infrastructure" plan
+	terraform -chdir="${THIS_DIR}/infrastructure" apply
+
 }
 
 

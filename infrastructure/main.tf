@@ -48,7 +48,6 @@ terraform {
 
 provider "aws" {
   region = "us-west-2"
-  # profile = "sandbox"
 }
 
 # provider "zenml" {
@@ -56,26 +55,36 @@ provider "aws" {
 #   # ZENML_SERVER_URL and ZENML_API_KEY
 # }
 
+variable "grafana_otlp_endpoint" {
+  description = "OTLP HTTP endpoint for Grafana Cloud logs"
+  type        = string
+}
+
+variable "grafana_otlp_auth_header" {
+  description = "Authorization header value for Grafana Cloud OTLP endpoint, e.g., `Basic MTQxxx...`"
+  type        = string
+  sensitive   = true
+}
+
 
 # THis will create a ZenML stack on AWS with SageMaker as the orchestrator
 module "zenml_stack" {
-  source = "zenml-io/zenml-stack/aws"
+  # source = "zenml-io/zenml-stack/aws"
+  source = "./modules/terraform-aws-zenml-stack"
 
   zenml_stack_name = "cloud-migration-stack"
   orchestrator     = "sagemaker" # or "skypilot" or "local"
 
-  version = "2.0.10" # latest as of Jan 10 2026
+  # Pass Grafana OTLP settings from root variables (populated via TF_VAR_*)
+  grafana_otlp_endpoint    = var.grafana_otlp_endpoint
+  grafana_otlp_auth_header = var.grafana_otlp_auth_header
+
+  # version = "2.0.10" # latest as of Jan 10 2026
 }
 
 
 # ref: https://registry.terraform.io/modules/zenml-io/zenml-stack/aws/latest?tab=outputs
 # I copied the descriptions of the outputs from ^^^above docs
-
-
-output "zenml_stack" {
-  description = "The ZenML stack that was registered with the ZenML server"
-  value       = module.zenml_stack.zenml_stack
-}
 
 output "zenml_stack_id" {
   description = "The ID of the ZenML stack that was registered with the ZenML server"
@@ -87,22 +96,7 @@ output "zenml_stack_name" {
   value       = module.zenml_stack.zenml_stack_name
 }
 
-# output "orchestrator" {
-#   description = "The orchestrator that was registered with the ZenML server"
-#   value       = module.zenml_stack.orchestrator
-# }
-
-# output "artifact_store" {
-#   description = "The artifact store that was registered with the ZenML server"
-#   value       = module.zenml_stack.artifact_store
-# }
-
-# output "container_registry" {
-#   description = "The container registry that was registered with the ZenML server"
-#   value       = module.zenml_stack.container_registry
-# }
-
-# output "deployer" {
-#   description = "The deployer that was registered with the ZenML server"
-#   value       = module.zenml_stack.deployer
-# }
+output "zenml_stack" {
+  description = "The ZenML stack that was registered with the ZenML server"
+  value       = module.zenml_stack.zenml_stack
+}
