@@ -1,5 +1,18 @@
 # ZenML Solutions Challenge — The Cloud Migration (4h)
 
+**Amit:**
+
+* The [SOLUTION.md](./SOLUTION.md) file contains the brief documentation for the solution.
+
+* The [docs/README.md](./docs/README.md) file contains detailed steps on how I set up everything, the errors I faced, and how I resolved them.
+
+* AI wasn't used in writing any code, however I did ask ChatGPT to write me the things I need to learn to complete the challenge.
+  * TBH, I didn't follow it through, because it was quite long😂. So I wrote a checklist for myself which you can read it my detailed docs
+  * On few specific errors, I did ask ChatGPT for help in debugging them. I have mentioned those instances in my detailed docs.
+
+* Also I did do parts of Hashicorp's Terraform [AWS tutorial](https://developer.hashicorp.com/terraform/tutorials/aws-get-started) to get some familiarity with Terraform.
+
+
 ## Overview 🌟
 
 At ZenML, we are the bridge between the Data Science world and the Infrastructure world. A massive part of your role as a Solutions Engineer is helping customers move from "running on my laptop" to "running on the cloud" without the headache.

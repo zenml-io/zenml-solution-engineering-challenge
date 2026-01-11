@@ -479,12 +479,35 @@
 
 * **
 
+I wanted to figure out what [configuration parameters](https://registry.terraform.io/providers/zenml-io/zenml/latest/docs/resources/stack_component#configuration-3) and how could I pass my endpoint URL and the auth headers in my log_store component in my Terraform script.
+
+So I went to the ZenML OTel log store [documentation](https://docs.zenml.io/stacks/stack-components/log-stores/otel). The doc had following example mentioned:
+```shell
+# Create a secret with your API key
+zenml secret create otel_auth \
+    --api_key=<YOUR_API_KEY>
+
+# Register the log store with the header
+zenml log-store register my_otel_logs \
+    --flavor=otel \
+    --endpoint=https://otel-collector.example.com/v1/logs \
+    --headers='{"Authorization": "Bearer {{otel_auth.api_key}}"}'
+```
+
+So in my Terraform script, I used `Authorization: Bearer <glc_...>` as the auth header value with my Grafana API Token, which is wrong.
+
+It should be `Authorization: Basic <base64(instance_id:api_key)>` that you get from Grafana Cloud while setting up the OTLP endpoint.
+
+^^^ChatGPT helped me figure this out.
+
+* **
+
 Earlier while running the pipeline on the previously deployed stack, I was getting this warning related to Sagemaker permissions:
 ```shell
 2026-01-11 10:16:19.549 warn There was an issue while extracting the SageMaker Studio URL: An error occurred (AccessDeniedException) when calling the ListDomains operation: User: arn:aws:sts::<account-id>:assumed-role/zenml-39163c977f9b/zenml-connector-df5648e5-6c93-4661-a09c-5002a551c756 is not authorized to perform: sagemaker:ListDomains on resource: arn:aws:sagemaker:us-west-2:<account-id>:domain/* because no identity-based policy allows the sagemaker:ListDomains action 
 ```
 
-So I also added the `sagemaker:ListDomains` permission to the IAM role created by the Terraform module for the ZenML connector.
+So I also added the `sagemaker:ListDomains` permission to the IAM role created by the Terraform module for the ZenML connector. I asked ChatGPT to do this.
 ```terraform
 resource "aws_iam_role_policy" "sagemaker_list_domains_policy" {
   count = var.orchestrator == "sagemaker" ? 1 : 0
