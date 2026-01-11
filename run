@@ -38,13 +38,21 @@ deploy_infra() {
 
 }
 
+run_pipeline() {
+	set -x
+
+	# For running the pipeline with the remote stack, enabling asynchronous execution
+	local active_stack
+	active_stack="$(uv run zenml stack get 2>&1 || true)"
+	if [[ "$active_stack" == *"cloud-migration-stack"* ]]; then
+		uv run zenml orchestrator update cloud-migration-stack-sagemaker --synchronous=False
+	fi
+
+	uv run src/run.py
+}
 
 zenml_login:local() {
 	uv run zenml login --local
-}
-
-run_pipeline() {
-	uv run src/run.py
 }
 
 deploy_pipeline:local() {
