@@ -173,7 +173,7 @@ The deployed stack provisions the following AWS resources:
 - CodeBuild costs will depend on how often the docker images are built/re-built, the compute type used, and the duration taken to build the images.
 - The major cost will be from running the SageMaker training jobs, which will depend on the instance type used and the duration taken to run the pipeline steps.
 - If you choose to deploy the model as an endpoint using App Runner, that will incur additional costs based on the instance type and duration taken to run the endpoint.
-- If you choose to go to Grafana Cloud paid plans for log storage and retention, that will incur additional costs based on the plan chosen.
+- If you choose to go to [Grafana Cloud paid plans](https://grafana.com/pricing/#logs) for log storage and retention, that will incur additional costs based on the plan chosen.
   - But if you choose to use the default log store provided by ZenML, i.e., your artifact store(S3), that will incur additional S3 costs. Usually logs fill up quickly.
 
 
@@ -181,7 +181,8 @@ The deployed stack provisions the following AWS resources:
 
 - Using spot instances for SageMaker training jobs when possible.
 - Archiving old S3 artifacts to cheaper storage classes like S3 Glacier. You can set up lifecycle policies for this like move artifacts older than 30 days to Glacier.
-- Aumomatic cleaning up of old docker images in ECR that are no longer needed.
+- Setting up log retention policies to delete old logs from the log store after a certain period.
+- Automatic cleaning up of old docker images in ECR that are no longer needed.
 - One of the best things you could do set up budgets and alerts using AWS Cost Management Console to monitor your costs and get alerted when costs exceed a certain threshold.
 - Talking to AWS Support guys can be super helpful to optimize costs based on your specific use case.
 
