@@ -59,11 +59,17 @@ Assumes you have an AWS account.
     ./run tf_init       # Initialize Terraform
     ./run deploy_infra  # Deploy the infrastructure
 
+    # Install deps
+    uv sync
+
     # Configure ZenML to use the remote stack
     zenml login <your-workspace>
     zenml init
     zenml stack set cloud-migration-stack
     zenml project set <your-project>
+
+    # Install SageMaker integrations
+    uv run -- zenml integration install s3 aws --uv
 
     # Use the run script to execute the pipeline
     ./run run_pipeline
@@ -126,7 +132,7 @@ A log store is a ZenML stack component that centrally collects and stores logs p
 | Orchestrator       | AWS SageMaker                | Run pipeline steps                |
 | Step Operator      | AWS SageMaker                | Execute individual steps          |
 | Image Builder      | AWS CodeBuild                | Build Docker images for pipelines |
-| Deployer           | AWS App Runner               | for model serving                 |
+| Deployer           | AWS App Runner               | for model serving (Optional)      |
 | Log Store          | OTEL (Grafana Cloud backend) | Export logs to Grafana            |
 
 **Trust Boundaries & Secrets**:
@@ -136,11 +142,20 @@ A log store is a ZenML stack component that centrally collects and stores logs p
 
 ## Cost Considerations
 
-<p align="center">
-<img src="./docs/images/sagemaker-training-job.png" alt="SageMaker Training Job" width="800"/>
-<br>
-<em>SageMaker Training Job Running the Pipeline Step</em>
-</p>
+The pricing levers that affect the overall cost of running the pipeline on AWS falls into two categories:
+- *The AWS resources you pay for to simply exist* (for example, files in an S3 bucket or EC2 instances) and 
+- *those you pay for only when you run a pipeline.*
+
+The total cost is the sum of these two parts. For calculating the cost per run of the DAG, consider the following:
+- Consider the size of the artifacts created by the DAG and the size of the logs it generates.
+
+- Assess the number of on-demand compute instances spun up to run the DAG’s steps, and how long those steps run; multiply by the cost per second or per minute, using the total runtime as the basis.
+
+Use this to estimate you can get an upper bound on the cost.
+
+Ultimately, the data science team will care about the cost for the platform to sit idle and the usage cost that accumulates per DAG as more DAGs are added and run on the platform.
+
+* **
 
 The deployed stack provisions the following AWS resources:
 - [S3](https://aws.amazon.com/s3/pricing/) for Artifact Store
@@ -151,21 +166,78 @@ The deployed stack provisions the following AWS resources:
 - Log Store using Grafana Cloud (free tier)
 
 
-The pricing for each of these components can vary based on usage, region, and specific configurations.
+### The things to consider are:
 
-For instance:
+- S3 costs will depend on size of the artifacts produced, if your pipeline runs frequently, and the data transferred out of S3, i.e. how often you query the pipeline run artifacts.
+- ECR costs will depend on the size of the docker images stored and the data transferred out of ECR.
+- CodeBuild costs will depend on how often the docker images are built/re-built, the compute type used, and the duration taken to build the images.
+- The major cost will be from running the SageMaker training jobs, which will depend on the instance type used and the duration taken to run the pipeline steps.
+- If you choose to deploy the model as an endpoint using App Runner, that will incur additional costs based on the instance type and duration taken to run the endpoint.
+- If you choose to go to Grafana Cloud paid plans for log storage and retention, that will incur additional costs based on the plan chosen.
+  - But if you choose to use the default log store provided by ZenML, i.e., your artifact store(S3), that will incur additional S3 costs. Usually logs fill up quickly.
 
-* For the sample pipeline provided, the Sagemaker training job runs on an `ml.m5.xlarge` instance, which runs for ~69 seconds, with $0.23/hour pricing, for 4vCPUs and 16GB RAM.
-  * The AWS free tier offers 50 hours of training time on `m4.xlarge` or `m5.xlarge` instances
 
-* The S3 costs depend on the amount of data stored and the number of requests made.
+**Few Good Practices to Optimize Costs:**
 
-* *The AWS Cost Management Console can help you monitor and estimate your costs based on actual usage.*
+- Using spot instances for SageMaker training jobs when possible.
+- Archiving old S3 artifacts to cheaper storage classes like S3 Glacier. You can set up lifecycle policies for this like move artifacts older than 30 days to Glacier.
+- Aumomatic cleaning up of old docker images in ECR that are no longer needed.
+- One of the best things you could do set up budgets and alerts using AWS Cost Management Console to monitor your costs and get alerted when costs exceed a certain threshold.
+- Talking to AWS Support guys can be super helpful to optimize costs based on your specific use case.
 
-AWS Free Tier:
-  - As of July 15th 2025, the new [AWS Free Tier](https://aws.amazon.com/free/) provides upto $200 of free credits for new users for upto 6 months.
-  
-  - >This [awesome video](https://youtu.be/V6yBzR_Ycms?si=ola_Gjq4OX6aC0BH) by Be A Better Dev explains how the new AWS Free Tier works.
+* **
+
+
+### Sample Cost Breakdown of a single Pipeline Run
+
+For the sample pipeline provided, here is how you can break down the costs:
+
+<p align="center">
+<img src="./docs/images/sagemaker-training-job.png" alt="SageMaker Training Job" width="800"/>
+<br>
+<em>SageMaker Training Job Running the Pipeline Step</em>
+</p>
+
+For ad-hoc scenarios like this you could go to the AWS Console for each of these services, check the usage, and based on the pricing model for each service, estimate the cost.
+
+- S3 charges are based on the total size of artifacts stored and the number of requests made to S3 like PUT, GET, LIST etc.
+  - Artifact Storage in S3:  
+      ```plaintext
+      S3 Path Size Report:
+      ----------------------------------------
+      {s3_path}/sagemaker/pipelines-1xxn9bzy90kz-validator-nzmcFJqbvX/         : 230.85 KB
+      {s3_path}/code_uploads/6e39543af76ecf3e41f707cc282fb115933ec8cb.tar.gz   : 3.69 MB
+      {s3_path}/loader/output/041d0fcc-ad8b-40d2-9d9a-8b23c3473b7d/4dd2b6a1    : 23 B
+      {s3_path}/processor/output/41549a5f-5075-4d12-9015-4aeb44b98931/459dbde4 : 23 B
+      {s3_path}/validator/output/c44f7c3d-c427-47ee-bc84-bbd2ec913146/a6d0c5d9 : 4 B
+      ----------------------------------------
+      Total Size: 3.91 MB
+      ```
+
+- AWS CodeBuild charges are based on the compute type and duration taken to build the Docker image for the pipeline.
+  - CodeBuild uses an EC2 instance with 2 vCPUs and 4GB RAM for avrage duration of ~40-50 seconds to build the Docker image for the pipeline.
+  - Which is: $0.003 * (50 seconds / 60 seconds) = $0.0025
+
+- ECR charges per month based on the amount of data stored in the repository.
+  - The docker image stored in ECR is around ~151 MB in size.
+  - $0.10 per GB * 0.151 GB = $0.0151 
+
+- SageMaker charges are based on the instance type and duration taken to run the pipeline steps.
+  - The Sagemaker training job runs on an `ml.m5.xlarge` instance($0.23/hour), which has 4 vCPUs and 16GB RAM, for ~63 seconds.
+  - Which is: $0.23/hour * (63 seconds / 3600 seconds) = $0.004025
+
+- Here we are not considering the App Runner. Assume this pipeline runs a batch job and not deployed as an model endpoint.
+
+So, the total estimated cost for running the sample pipeline once would be approximately:
+
+```plaintext
+S3 Storage: Negligible for small artifacts
+CodeBuild: $0.0025
+ECR Storage: $0.0151
+SageMaker Training Job: $0.004025
+----------------------------------------
+Total Estimated Cost per Pipeline Run: a little over ~$0.021625
+```
 
 ## Demo Video
 
