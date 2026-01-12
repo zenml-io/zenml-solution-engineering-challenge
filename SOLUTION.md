@@ -246,4 +246,4 @@ You could go to the AWS Cost Management Console to get a detailed breakdown of c
 
 ## Demo Video
 
-[Video Link]()
+[Video Link](https://share.descript.com/view/6acmbGTkaO0)
