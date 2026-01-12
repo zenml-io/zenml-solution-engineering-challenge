@@ -239,6 +239,16 @@ SageMaker Training Job: $0.004025
 Total Estimated Cost per Pipeline Run: a little over ~$0.021625
 ```
 
+* **
+
+You could go to the AWS Cost Management Console to get a detailed breakdown of costs incurred by each of these services:
+
+<p align="center">
+<img src="./docs/images/aws-cost.png" alt="AWS Cost Management Console"/>
+<br>
+<em>AWS Cost Management Console showing cost breakdown by service</em>
+</p>
+
 ## Demo Video
 
 [Video Link]()
