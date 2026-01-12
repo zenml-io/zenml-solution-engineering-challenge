@@ -85,6 +85,27 @@ All Terraform files are located in the `infrastructure/` directory.
 * `main.tf` provisions the entire AWS stack using a local copy of the [ZenML Terraform module](https://registry.terraform.io/modules/zenml-io/zenml-stack/aws/latest).
 * The module is extended to include an OTEL log store component for centralized logging.
 
+### Architecture Summary
+
+The setup uses a [ZenML Pro control plane](https://docs.zenml.io/getting-started/system-architectures), an AWS execution environment for the deployed stack, and a Grafana Cloud workspace for log storage.
+
+The deployed stack provisions the following AWS resources:
+
+| Component Type     | Technology                                                        | Purpose                           |
+| ------------------ | ----------------------------------------------------------------- | --------------------------------- |
+| Artifact Store     | [AWS S3](https://aws.amazon.com/s3/pricing/)                      | Store pipeline inputs/outputs     |
+| Container Registry | [AWS ECR](https://aws.amazon.com/ecr/pricing/)                    | Store container images            |
+| Orchestrator       | [AWS SageMaker](https://aws.amazon.com/sagemaker/ai/pricing/)     | Run pipeline steps                |
+| Step Operator      | [AWS SageMaker](https://aws.amazon.com/sagemaker/ai/pricing/)     | Execute individual steps          |
+| Image Builder      | [AWS CodeBuild](https://aws.amazon.com/codebuild/pricing/)        | Build Docker images for pipelines |
+| Deployer           | [AWS App Runner](https://aws.amazon.com/apprunner/pricing/)       | for model serving (Optional)      |
+| Log Store          | OTEL ([Grafana Cloud](https://grafana.com/pricing/#logs) backend) | Export logs to Grafana            |
+
+**Trust Boundaries & Secrets**:
+
+* ZenML Pro assumes roles in AWS using Service Connectors
+* Grafana OTLP credentials passed as env vars via Terraform (`TF_VAR_...`)
+
 ## Pipeline Execution
 
 <p align="center">
@@ -123,23 +144,6 @@ A log store is a ZenML stack component that centrally collects and stores logs p
 * Logs are exported to **Grafana Cloud Logs UI** via the OTEL log store
 * Navigate to your Grafana workspace home → Drilldown → Logs → Filter by `service.name`
 
-### Architecture Summary
-
-| Component Type     | Technology                   | Purpose                           |
-| ------------------ | ---------------------------- | --------------------------------- |
-| Artifact Store     | AWS S3                       | Store pipeline inputs/outputs     |
-| Container Registry | AWS ECR                      | Store container images            |
-| Orchestrator       | AWS SageMaker                | Run pipeline steps                |
-| Step Operator      | AWS SageMaker                | Execute individual steps          |
-| Image Builder      | AWS CodeBuild                | Build Docker images for pipelines |
-| Deployer           | AWS App Runner               | for model serving (Optional)      |
-| Log Store          | OTEL (Grafana Cloud backend) | Export logs to Grafana            |
-
-**Trust Boundaries & Secrets**:
-
-* ZenML Pro assumes roles in AWS using Service Connectors
-* Grafana OTLP credentials passed as env vars via Terraform (`TF_VAR_...`)
-
 ## Cost Considerations
 
 The pricing levers that affect the overall cost of running the pipeline on AWS falls into two categories:
@@ -154,16 +158,6 @@ The total cost is the sum of these two parts. For calculating the cost per run o
 Use this to estimate you can get an upper bound on the cost.
 
 Ultimately, the data science team will care about the cost for the platform to sit idle and the usage cost that accumulates per DAG as more DAGs are added and run on the platform.
-
-* **
-
-The deployed stack provisions the following AWS resources:
-- [S3](https://aws.amazon.com/s3/pricing/) for Artifact Store
-- [ECR](https://aws.amazon.com/ecr/pricing/) for Container Registry
-- [SageMaker](https://aws.amazon.com/sagemaker/ai/pricing/) for Orchestrator and Step Operator
-- [CodeBuild](https://aws.amazon.com/codebuild/pricing/) for building container images
-- [App Runner](https://aws.amazon.com/apprunner/pricing/) for model deployment
-- Log Store using Grafana Cloud (free tier)
 
 
 ### The things to consider are:
