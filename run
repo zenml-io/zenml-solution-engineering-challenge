@@ -28,7 +28,7 @@ deploy_infra() {
 	export TF_VAR_grafana_otlp_auth_header="${OTEL_EXPORTER_OTLP_HEADERS}"
 
 	# Check if aws profile is active
-	aws sts get-caller-identity > /dev/null 2>&1 || {
+	aws sts get-caller-identity --profile "${AWS_PROFILE}" > /dev/null 2>&1 || {
 		echo "AWS profile '${AWS_PROFILE}' is not active. Please configure it and try again."
 		exit 1
 	}
@@ -49,8 +49,8 @@ run_pipeline() {
 
 	# For running the pipeline with the remote stack, enabling asynchronous execution
 	local active_stack
-	active_stack="$(uv run zenml stack get 2>&1 || true)"
-	if [[ "$active_stack" == *"cloud-migration-stack"* ]]; then
+	active_stack="$(uv run zenml stack list --output=json | jq -r '.items[] | select(.active==true) | .name' 2>/dev/null || true)"
+	if [[ "$active_stack" == "cloud-migration-stack" ]]; then
 		uv run zenml orchestrator update cloud-migration-stack-sagemaker --synchronous=False
 	fi
 
