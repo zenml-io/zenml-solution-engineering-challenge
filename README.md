@@ -116,7 +116,7 @@ To use the Terraform modules, you’ll need a **remote ZenML server** (not `zenm
 
 ## Deliverables 📦
 
-Submit a private GitHub repo (fork this repo and push your changes to a new private one). Add collaborators: `htahir1`, `stefannica`, and `AlexejPenner`.
+Submit a private GitHub repo (fork this repo and push your changes to a new private one). Add collaborators: `htahir1`, `safoinme`, and `AlexejPenner`.
 
 Your repository should contain:
 
