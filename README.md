@@ -92,14 +92,19 @@ To use the Terraform modules, you’ll need a **remote ZenML server** (not `zenm
   - If you need more time, email `careers@zenml.io` and we can extend your trial so you don’t have to deploy ZenML yourself.
 - **Optional**: self-host **ZenML OSS** if you prefer. See [these docs](https://docs.zenml.io/deploying-zenml/deploying-zenml) to learn more.
 
+### 2.5 CI/CD 🔄
+
+**Requirement**: Use GitHub Actions to either **trigger pipeline runs** or **build pipeline snapshots** (or both). Document required GitHub secrets in your solution.
+
 ### 3. The "Solution" (Content) 📚
 
 **Requirement**: Create a clear, customer-facing guide (you can overwrite this README or create a `SOLUTION.md`) that explains how to provision the stack and run the included pipeline.
 
-**Requirement**: Record a **Loom video (exactly 5 minutes)** acting as if you are demoing this solution to the customer. In your video:
+**Requirement**: Record a **Loom video (exactly 7 minutes)** acting as if you are demoing this solution to the customer. In your video:
 - Walk through the Terraform setup (1-2 mins)
 - Show the ZenML stack registration (1-2 mins)
 - Demonstrate the pipeline running successfully on the cloud (1-2 mins)
+- Include CI/CD (triggering runs or building snapshots) (1-2 mins)
 - Share the Loom link in your documentation
 
 ## Tech Stack 💻
@@ -116,17 +121,21 @@ Submit a private GitHub repo (fork this repo and push your changes to a new priv
 Your repository should contain:
 
 1. **Terraform Code**: Your updated `infrastructure/main.tf` used to provision the cloud stack using the official ZenML Terraform module.
-2. **Pipeline Execution Proof**: Use the included `src/run.py` (already provided) as a smoke test and run it against your cloud stack successfully.
+2. **CI/CD**: GitHub Actions that triggers pipeline runs and/or builds pipeline snapshots.
+3. **Pipeline Execution Proof**: Use the included `src/run.py` (already provided) as a smoke test and run it against your cloud stack successfully.
    - You may modify `src/run.py`, but you don't have to.
-3. **Log Store Integration**: Terraform code that registers a ZenML `log_store` stack component and uses it in a ZenML stack.
-4. **Documentation**: A short guide titled "How to migrate your ZenML pipeline to the cloud" that explains your solution end-to-end. Include:
+4. **Log Store Integration**: Terraform code that registers a ZenML `log_store` stack component and uses it in a ZenML stack.
+5. **Documentation**: A short guide titled "How to migrate your ZenML pipeline to the cloud" that explains your solution end-to-end. Include:
    - A short explanation of what a **Log Store** is and why it matters
    - Where to find logs for a pipeline run / step in your chosen setup
    - A short **Architecture** section (keep it short — ~1 page max) covering:
      - components you deployed
      - trust boundaries and where secrets live
      - expected costs + one cost optimization idea
-5. **Demo Video**: A link to your **5-minute Loom video** in the documentation.
+     - CI/CD: required GitHub secrets
+6. **Demo Video**: A link to your **5-7 minute Loom video** in the documentation.
+
+**Stretch (optional)**: Use remote Terraform state.
 
 ## Evaluation Criteria 🔍
 
@@ -137,6 +146,8 @@ We are not looking for the most complex Terraform setup. We are looking for:
 3. **Customer Empathy**: Is your documentation and video clear, encouraging, and easy for a Data Scientist to understand?
 4. **Observability**: Did you configure a log store and make it obvious where to find step logs?
 5. **"It Works"**: Does the pipeline actually run on the cloud stack?
+6. **CI/CD**: Does CI/CD trigger pipeline runs and/or build snapshots?
+7. **Stretch — Remote State**: Is Terraform state stored remotely?
 
 ## AI Policy 🤖
 
@@ -150,7 +161,7 @@ If you didn't use AI, just write: **"No AI used."**
 
 ## Time Management ⏱️
 
-**Target time**: ~4 hours. If you get stuck on a specific cloud permission error (AWS IAM is tricky!) or run out of time:
+**Target time**: ~4 hours. If you get stuck on a specific cloud permission error (AWS IAM is tricky!), CI/CD, or run out of time:
 
 - Stop coding
 - Write down exactly what the error is, why you think it's happening, and how you would solve it given more time
